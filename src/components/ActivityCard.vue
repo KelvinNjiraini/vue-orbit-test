@@ -1,9 +1,20 @@
 <script setup>
 import { computed, ref } from 'vue';
-const props = defineProps(['showCard', 'metaData', 'id']);
+const props = defineProps([
+    'showCard',
+    'metaData',
+    'id',
+    'hoveredId',
+    'contactDate',
+    'customStyles',
+    'mouse-over-popover',
+]);
 const showCard = computed(() => props.showCard);
 const metaData = computed(() => props.metaData);
 const id = computed(() => props.id);
+const hoveredId = computed(() => props.hoveredId);
+const contactDate = computed(() => props.contactDate);
+const customStyles = computed(() => props.customStyles);
 const showMore = ref(false);
 
 const differenceInMilliseconds = ref(null);
@@ -37,108 +48,147 @@ const durationAgo = computed(() => {
 
 <template>
     <!-- main card container -->
-    <div class="activity" :id="id">
-        <!-- activity-header -->
-        <transition mode="out-in" name="header">
-            <div class="activity__header" v-if="showCard">
-                <div class="activity__img">
-                    <img :src="metaData.img" :alt="`${metaData.name} img`" />
-                </div>
-                <div class="bio-section">
-                    <h4 class="bio-section__name">{{ metaData.name }}</h4>
-                    <p class="bio-section__position">{{ metaData.position }}</p>
-                    <p class="bio-section__location">{{ metaData.city }}</p>
-                    <div class="bio-section__reactions">
-                        <div class="bio-section__connects">
+    <teleport to="body">
+        <div
+            :style="{
+                ...customStyles,
+                position: 'absolute',
+                zIndex: 200,
+            }"
+            @mouseenter="onCurserEnter"
+            @mouseleave="onCursorLeave"
+        >
+            <div class="activity" :id="id">
+                <!-- activity-header -->
+                <transition mode="out-in" name="header">
+                    <div
+                        class="activity__header"
+                        v-if="showCard && Number(hoveredId) === id"
+                    >
+                        <div class="activity__img">
                             <img
-                                src="/png/avatar-4.png"
-                                alt="avatar 4"
-                                class="bio-section__connection"
-                            />
-                            <img
-                                src="/png/avatar-1.png"
-                                alt="avatar 1"
-                                class="bio-section__connection"
-                            />
-                            <img
-                                src="/png/avatar-2.png"
-                                alt="avatar 2"
-                                class="bio-section__connection"
-                            />
-                            <img
-                                src="/png/avatar-3.png"
-                                alt="avatar 3"
-                                class="bio-section__connection"
+                                :src="metaData.img"
+                                :alt="`${metaData.name} img`"
                             />
                         </div>
-                        <p class="bio-section__mutuals">
-                            Peter Swage, John Eremic, and 281 other mutual
-                            connections
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </transition>
-        <!-- activity-info -->
-        <transition mode="out-in" name="info">
-            <div class="activity__info-container" v-if="showCard">
-                <div class="activity__info">
-                    <div class="activity__info__action">
-                        <img src="/svg/envelope.svg" alt="envelope svg" />
-                        <p>Reply from Emery Wells</p>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-content__date">
-                            <p class="info-content__time">
-                                {{
-                                    new Date(metaData.created_at).toUTCString()
-                                }}
+                        <div class="bio-section">
+                            <h4 class="bio-section__name">
+                                {{ metaData.name }}
+                            </h4>
+                            <p class="bio-section__position">
+                                {{ metaData.position }}
                             </p>
-                            <p class="info-content__time">{{ durationAgo }}</p>
+                            <p class="bio-section__location">
+                                {{ metaData.city }}
+                            </p>
+                            <div class="bio-section__reactions">
+                                <div class="bio-section__connects">
+                                    <img
+                                        src="/png/avatar-4.png"
+                                        alt="avatar 4"
+                                        class="bio-section__connection"
+                                    />
+                                    <img
+                                        src="/png/avatar-1.png"
+                                        alt="avatar 1"
+                                        class="bio-section__connection"
+                                    />
+                                    <img
+                                        src="/png/avatar-2.png"
+                                        alt="avatar 2"
+                                        class="bio-section__connection"
+                                    />
+                                    <img
+                                        src="/png/avatar-3.png"
+                                        alt="avatar 3"
+                                        class="bio-section__connection"
+                                    />
+                                </div>
+                                <p class="bio-section__mutuals">
+                                    Peter Swage, John Eremic, and 281 other
+                                    mutual connections
+                                </p>
+                            </div>
                         </div>
-                        <h5 class="message-title">
-                            {{ metaData._orbits_last_message.message_head }}
-                        </h5>
-                        <p class="message-content">
-                            {{
-                                showMore
-                                    ? metaData._orbits_last_message.message_head
-                                    : `${metaData._orbits_last_message.message_head.slice(
-                                          0,
-                                          13
-                                      )}...`
-                            }}
-                        </p>
-                        <button>
-                            <span> {{ showMore ? 'Less' : 'More' }} </span>
-                            <svg
-                                width="24"
-                                height="25"
-                                viewBox="0 0 24 25"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                :class="showMore ? '' : 'showMoreSvg'"
-                            >
-                                <path
-                                    d="M18 15.5732L12 9.57324L6 15.5732"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                        </button>
                     </div>
-                </div>
+                </transition>
+                <!-- activity-info -->
+                <transition mode="out-in" name="info">
+                    <div
+                        class="activity__info-container"
+                        v-if="showCard && Number(hoveredId) === id"
+                    >
+                        <div class="activity__info">
+                            <div class="activity__info__action">
+                                <img
+                                    src="/svg/envelope.svg"
+                                    alt="envelope svg"
+                                />
+                                <p>Reply from Emery Wells</p>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-content__date">
+                                    <p class="info-content__time">
+                                        {{
+                                            new Date(contactDate).toUTCString()
+                                        }}
+                                    </p>
+                                    <p class="info-content__time">
+                                        {{ durationAgo }}
+                                    </p>
+                                </div>
+                                <h5 class="message-title">
+                                    {{
+                                        metaData._orbits_last_message
+                                            .message_head
+                                    }}
+                                </h5>
+                                <p class="message-content">
+                                    {{
+                                        showMore
+                                            ? metaData._orbits_last_message
+                                                  .message
+                                            : `${metaData._orbits_last_message.message
+                                                  .split(' ')
+                                                  .slice(0, 13)
+                                                  .join(' ')}...`
+                                    }}
+                                </p>
+                                <button>
+                                    <span>
+                                        {{ showMore ? 'Less' : 'More' }}
+                                    </span>
+                                    <svg
+                                        width="24"
+                                        height="25"
+                                        viewBox="0 0 24 25"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        :class="showMore ? '' : 'showMoreSvg'"
+                                    >
+                                        <path
+                                            d="M18 15.5732L12 9.57324L6 15.5732"
+                                            stroke="white"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
             </div>
-        </transition>
-    </div>
+        </div>
+    </teleport>
 </template>
 <style scoped>
 .activity {
     position: relative;
     border-radius: 10px;
     width: 502px;
+    z-index: 200;
 }
 .activity::before {
     content: '';
@@ -263,6 +313,7 @@ const durationAgo = computed(() => {
     font-weight: 300;
     line-height: 19.36px;
     margin-bottom: 10px;
+    word-wrap: break-word;
 }
 .info-content button {
     outline: none;
@@ -289,8 +340,8 @@ const durationAgo = computed(() => {
 .info-leave-to {
     opacity: 0;
     visibility: hidden;
-    width: 0;
-    height: 0;
+    top: 0;
+    left: 0;
 }
 .header-enter-to,
 .header-leave-from,
@@ -298,8 +349,6 @@ const durationAgo = computed(() => {
 .info-leave-from {
     opacity: 1;
     visibility: visible;
-    width: auto;
-    height: auto;
 }
 .header-enter-active {
     transition: all 200ms ease-in;

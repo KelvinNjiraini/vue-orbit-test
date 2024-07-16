@@ -19,4 +19,6 @@
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background-color);
+    position: relative;
+    overflow: hidden;
 }
