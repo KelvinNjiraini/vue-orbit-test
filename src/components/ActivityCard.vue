@@ -54,6 +54,7 @@ const durationAgo = computed(() => {
                 ...customStyles,
                 position: 'absolute',
                 zIndex: 200,
+                pointerEvents: 'none',
             }"
             @mouseenter="onCurserEnter"
             @mouseleave="onCursorLeave"
@@ -189,6 +190,7 @@ const durationAgo = computed(() => {
     border-radius: 10px;
     width: 502px;
     z-index: 200;
+    /* pointer-events: all; */
 }
 .activity::before {
     content: '';

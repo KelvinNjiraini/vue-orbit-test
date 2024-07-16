@@ -14,6 +14,7 @@ const ActivityCard = defineAsyncComponent(() =>
 const hoveredId = ref(null);
 const hoveredPosition = ref({ x: 0, y: 0 });
 const showCard = ref(false);
+const cursorOnPopover = ref(false);
 
 const screenWidth = ref(window.innerWidth);
 const screenHeight = ref(window.innerHeight);
