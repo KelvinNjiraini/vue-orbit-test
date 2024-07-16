@@ -89,8 +89,8 @@ onUnmounted(() => {
         <div
             class="orbit-container"
             :style="{
-                height: `${calculateOrbitRadius(1200, data.length, index)}px`,
-                width: `${calculateOrbitRadius(1200, data.length, index)}px`,
+                height: `${calculateOrbitRadius(radius, data.length, index)}px`,
+                width: `${calculateOrbitRadius(radius, data.length, index)}px`,
             }"
             v-if="data.length !== 0"
             v-for="(orbit, index) in data.slice(0, 7)"
