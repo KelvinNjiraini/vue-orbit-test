@@ -1,22 +1,53 @@
 <script setup>
-import { computed } from 'vue';
-const props = defineProps(['showCard']);
+import { computed, ref } from 'vue';
+const props = defineProps(['showCard', 'metaData', 'id']);
 const showCard = computed(() => props.showCard);
+const metaData = computed(() => props.metaData);
+const id = computed(() => props.id);
+const showMore = ref(false);
+
+const differenceInMilliseconds = ref(null);
+const differenceInSeconds = ref(null);
+const differenceInMinutes = ref(null);
+const differenceInHours = ref(null);
+const differenceInDays = ref(null);
+
+const now = new Date();
+const receivedDate = computed(() => {
+    return metaData?.value.created_at;
+});
+
+differenceInMilliseconds.value = now - receivedDate.value;
+differenceInSeconds.value = Math.floor(differenceInMilliseconds.value / 1000);
+differenceInMinutes.value = Math.floor(differenceInSeconds.value / 60);
+differenceInHours.value = Math.floor(differenceInMinutes.value / 60);
+differenceInDays.value = Math.floor(differenceInHours.value / 24);
+
+const durationAgo = computed(() => {
+    if (differenceInHours.value > 24)
+        return `${differenceInDays.value} day(s) ago`;
+    if (differenceInMinutes.value > 60)
+        return `${differenceInHours.value} hour(s) ago`;
+    if (differenceInSeconds.value > 60)
+        return `${differenceInMinutes.value} minutes(s) ago`;
+    if (differenceInMilliseconds.value > 1000)
+        return `${differenceInSeconds} seconds ago`;
+});
 </script>
 
 <template>
     <!-- main card container -->
-    <div class="activity">
+    <div class="activity" :id="id">
         <!-- activity-header -->
         <transition mode="out-in" name="header">
             <div class="activity__header" v-if="showCard">
                 <div class="activity__img">
-                    <img src="/svg/avatar.svg" alt="default avatar svg" />
+                    <img :src="metaData.img" :alt="`${metaData.name} img`" />
                 </div>
                 <div class="bio-section">
-                    <h4 class="bio-section__name">John Doe</h4>
-                    <p class="bio-section__position">Marketing Manager</p>
-                    <p class="bio-section__location">New York City</p>
+                    <h4 class="bio-section__name">{{ metaData.name }}</h4>
+                    <p class="bio-section__position">{{ metaData.position }}</p>
+                    <p class="bio-section__location">{{ metaData.city }}</p>
                     <div class="bio-section__reactions">
                         <div class="bio-section__connects">
                             <img
@@ -59,27 +90,34 @@ const showCard = computed(() => props.showCard);
                     <div class="info-content">
                         <div class="info-content__date">
                             <p class="info-content__time">
-                                Saturday, November 4 2023 at 9:04 AM EST
+                                {{
+                                    new Date(metaData.created_at).toUTCString()
+                                }}
                             </p>
-                            <p class="info-content__time">2 days ago</p>
+                            <p class="info-content__time">{{ durationAgo }}</p>
                         </div>
                         <h5 class="message-title">
-                            Collaboration Opportunity for Product Expansion
+                            {{ metaData._orbits_last_message.message_head }}
                         </h5>
                         <p class="message-content">
-                            I hope this message finds you well. I wanted to
-                            reach out to discuss a potential collaboration
-                            opportunity that could significantly benefit both of
-                            our organizations.
+                            {{
+                                showMore
+                                    ? metaData._orbits_last_message.message_head
+                                    : `${metaData._orbits_last_message.message_head.slice(
+                                          0,
+                                          13
+                                      )}...`
+                            }}
                         </p>
                         <button>
-                            <span> Less </span>
+                            <span> {{ showMore ? 'Less' : 'More' }} </span>
                             <svg
                                 width="24"
                                 height="25"
                                 viewBox="0 0 24 25"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
+                                :class="showMore ? '' : 'showMoreSvg'"
                             >
                                 <path
                                     d="M18 15.5732L12 9.57324L6 15.5732"
@@ -142,6 +180,7 @@ const showCard = computed(() => props.showCard);
     height: 100px;
     width: 100px;
     object-fit: cover;
+    border-radius: 50%;
 }
 .bio-section__name {
     font-weight: 700;
@@ -239,6 +278,9 @@ const showCard = computed(() => props.showCard);
     color: white;
     margin-right: 5px;
 }
+.info-content button svg {
+    transition: all 0.3s;
+}
 
 /* transition styles */
 .header-enter-from,
@@ -266,5 +308,9 @@ const showCard = computed(() => props.showCard);
 .info-enter-active {
     transition: all 200ms ease-in;
     transition-delay: 0.2s;
+}
+
+.showMoreSvg {
+    rotate: 180deg;
 }
 </style>
