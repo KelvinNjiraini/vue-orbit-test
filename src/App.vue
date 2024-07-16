@@ -5,6 +5,8 @@ import {
     onUnmounted,
     computed,
     defineAsyncComponent,
+    onBeforeMount,
+    onBeforeUnmount,
 } from 'vue';
 import { useFetch } from './composables/useFetch';
 const ActivityCard = defineAsyncComponent(() =>
@@ -14,7 +16,6 @@ const ActivityCard = defineAsyncComponent(() =>
 const hoveredId = ref(null);
 const hoveredPosition = ref({ x: 0, y: 0 });
 const showCard = ref(false);
-const cursorOnPopover = ref(false);
 
 const screenWidth = ref(window.innerWidth);
 const screenHeight = ref(window.innerHeight);
@@ -72,6 +73,12 @@ function handleAvatarAngle(dataLength, currentIndex) {
     const baseAngle = 160 / dataLength;
     return baseAngle * (currentIndex + 1);
 }
+onBeforeMount(() => {
+    console.log(window);
+    window.addEventListener('scroll', function (event) {
+        console.log(event);
+    });
+});
 
 onMounted(async () => {
     window.addEventListener('resize', handleResize);

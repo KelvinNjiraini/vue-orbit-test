@@ -7,7 +7,6 @@ const props = defineProps([
     'hoveredId',
     'contactDate',
     'customStyles',
-    'mouse-over-popover',
 ]);
 const showCard = computed(() => props.showCard);
 const metaData = computed(() => props.metaData);
@@ -15,6 +14,7 @@ const id = computed(() => props.id);
 const hoveredId = computed(() => props.hoveredId);
 const contactDate = computed(() => props.contactDate);
 const customStyles = computed(() => props.customStyles);
+const cursorOnPopover = ref(false);
 const showMore = ref(false);
 
 const differenceInMilliseconds = ref(null);
@@ -44,6 +44,10 @@ const durationAgo = computed(() => {
     if (differenceInMilliseconds.value > 1000)
         return `${differenceInSeconds} seconds ago`;
 });
+
+function onCursorEnter(event) {
+    console.log(event);
+}
 </script>
 
 <template>
@@ -56,8 +60,7 @@ const durationAgo = computed(() => {
                 zIndex: 200,
                 pointerEvents: 'none',
             }"
-            @mouseenter="onCurserEnter"
-            @mouseleave="onCursorLeave"
+            @mouseenter="($event) => onCursorEnter($event)"
         >
             <div class="activity" :id="id">
                 <!-- activity-header -->
@@ -190,7 +193,6 @@ const durationAgo = computed(() => {
     border-radius: 10px;
     width: 502px;
     z-index: 200;
-    /* pointer-events: all; */
 }
 .activity::before {
     content: '';
@@ -342,8 +344,6 @@ const durationAgo = computed(() => {
 .info-leave-to {
     opacity: 0;
     visibility: hidden;
-    top: 0;
-    left: 0;
 }
 .header-enter-to,
 .header-leave-from,
