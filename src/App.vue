@@ -15,7 +15,7 @@ const ActivityCard = defineAsyncComponent(() =>
 // const avatarDiameter = 60;
 const hoveredId = ref(null);
 const hoveredPosition = ref({ x: 0, y: 0 });
-const showCard = ref(false);
+const isCursorOnCard = ref(false);
 
 const screenWidth = ref(window.innerWidth);
 const screenHeight = ref(window.innerHeight);
@@ -30,20 +30,11 @@ function handleDuplicateIds(originalArr) {
     return new Set(originalArr);
 }
 
-function handleResize() {
-    screenWidth.value = window.innerWidth;
-    screenHeight.value = window.innerHeight;
-}
-
-function handleScroll() {
-    console.log(window.scrollY);
-}
-
 function handleAvatarEnter(event, elementId) {
     // if (event.target.id !== String(elementId)) return;
     if (event.type === 'mouseenter' && event.target.id === String(elementId)) {
         hoveredId.value = event.target.id;
-        showCard.value = true;
+        // showCard.value = true;
 
         const rect = event.target.getBoundingClientRect();
         hoveredPosition.value = {
@@ -54,14 +45,19 @@ function handleAvatarEnter(event, elementId) {
         return;
     }
 }
-function handleAvatarLeave(event, elementId) {
-    // if (event.target.id !== String(elementId)) return;
-    // console.log(event.target.id === String(elementId));
-    if (event.type === 'mouseleave' && event.target.id === String(elementId)) {
-        hoveredId.value = null;
-        showCard.value = false;
-        hoveredPosition.value = { x: 0, y: 0 }; // Reset position
+
+function handleCursorOnCard(cursorOnPopover) {
+    if (!cursorOnPopover && isCursorOnCard.value) {
+        setTimeout(() => {
+            hoveredId.value = null;
+            // Reset position
+            hoveredPosition.value = { x: 0, y: 0 };
+            isCursorOnCard.value = false;
+        }, 100);
         return;
+    }
+    if (cursorOnPopover && !isCursorOnCard.value) {
+        isCursorOnCard.value = true;
     }
 }
 
@@ -74,20 +70,19 @@ function handleAvatarAngle(dataLength, currentIndex) {
     return baseAngle * (currentIndex + 1);
 }
 onBeforeMount(() => {
-    console.log(window);
     window.addEventListener('scroll', function (event) {
         console.log(event);
     });
 });
 
 onMounted(async () => {
-    window.addEventListener('resize', handleResize);
+    //
     data.value = await useFetch(new Date().toISOString());
     // console.log(data.value);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
+    //
 });
 </script>
 
@@ -137,10 +132,6 @@ onUnmounted(() => {
                             ($event) =>
                                 handleAvatarEnter($event, avatarItem?.id)
                         "
-                        @mouseleave="
-                            ($event) =>
-                                handleAvatarLeave($event, avatarItem?.id)
-                        "
                     >
                         <img
                             :src="avatarItem.img"
@@ -166,7 +157,6 @@ onUnmounted(() => {
                             }"
                         >
                             <ActivityCard
-                                :show-card="showCard"
                                 :meta-data="orbit.array[avatarIdx]"
                                 :id="orbit.array[avatarIdx].id"
                                 :hovered-id="hoveredId"
@@ -175,6 +165,8 @@ onUnmounted(() => {
                                     left: `${hoveredPosition.x}px`,
                                     top: `${hoveredPosition.y}px`,
                                 }"
+                                @card-hover-on="handleCursorOnCard"
+                                @card-hover-off="handleCursorOnCard"
                             />
                         </div>
                     </div>
@@ -255,9 +247,15 @@ onUnmounted(() => {
 }
 .avatar-wrapper {
     position: relative;
-    overflow: hidden;
+    height: 0px;
+    display: flex;
+    align-items: center;
+    margin-left: -30px;
 }
 .avatar-info {
     position: absolute;
+}
+.disable-pointer-events {
+    pointer-events: 'none';
 }
 </style>

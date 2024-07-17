@@ -1,14 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue';
+const emits = defineEmits(['cardHoverOn', 'cardHoverOff']);
 const props = defineProps([
-    'showCard',
+    // 'showCard',
     'metaData',
     'id',
     'hoveredId',
     'contactDate',
     'customStyles',
 ]);
-const showCard = computed(() => props.showCard);
+// const showCard = computed(() => props.showCard);
 const metaData = computed(() => props.metaData);
 const id = computed(() => props.id);
 const hoveredId = computed(() => props.hoveredId);
@@ -46,7 +47,14 @@ const durationAgo = computed(() => {
 });
 
 function onCursorEnter(event) {
-    console.log(event);
+    cursorOnPopover.value = true;
+    // console.log(event);
+    emits('cardHoverOn', cursorOnPopover.value);
+}
+
+function onCursorLeave(event) {
+    cursorOnPopover.value = false;
+    emits('cardHoverOff', cursorOnPopover.value);
 }
 </script>
 
@@ -61,13 +69,14 @@ function onCursorEnter(event) {
                 pointerEvents: 'none',
             }"
             @mouseenter="($event) => onCursorEnter($event)"
+            @mouseleave="($event) => onCursorLeave($event)"
         >
             <div class="activity" :id="id">
                 <!-- activity-header -->
                 <transition mode="out-in" name="header">
                     <div
                         class="activity__header"
-                        v-if="showCard && Number(hoveredId) === id"
+                        v-if="Number(hoveredId) === id"
                     >
                         <div class="activity__img">
                             <img
@@ -120,7 +129,7 @@ function onCursorEnter(event) {
                 <transition mode="out-in" name="info">
                     <div
                         class="activity__info-container"
-                        v-if="showCard && Number(hoveredId) === id"
+                        v-if="Number(hoveredId) === id"
                     >
                         <div class="activity__info">
                             <div class="activity__info__action">
@@ -154,11 +163,11 @@ function onCursorEnter(event) {
                                                   .message
                                             : `${metaData._orbits_last_message.message
                                                   .split(' ')
-                                                  .slice(0, 13)
+                                                  .slice(0, 10)
                                                   .join(' ')}...`
                                     }}
                                 </p>
-                                <button>
+                                <button @click="showMore = !showMore">
                                     <span>
                                         {{ showMore ? 'Less' : 'More' }}
                                     </span>
@@ -194,6 +203,10 @@ function onCursorEnter(event) {
     width: 502px;
     z-index: 200;
 }
+
+.activity > * {
+    pointer-events: auto;
+}
 .activity::before {
     content: '';
     /* background: linear-gradient(to bottom, var(--light-gray), var(--dark-gray)); */
@@ -214,6 +227,7 @@ function onCursorEnter(event) {
     padding: 10px;
     /* border-radius: 12px; */
     position: relative;
+    /* pointer-events: auto; */
 }
 .activity__header::before {
     content: '';
@@ -275,6 +289,7 @@ function onCursorEnter(event) {
 .activity__info-container {
     padding: 10px;
     background: var(--background-color-2);
+    pointer-events: auto;
 }
 .info-content {
     color: white;
