@@ -37,6 +37,15 @@ function handleAvatarEnter(event, elementId) {
         // showCard.value = true;
 
         const rect = event.target.getBoundingClientRect();
+        let topPosition = rect.top;
+        let distanceFromBottom = window.innerHeight - topPosition;
+        if (distanceFromBottom < 400) {
+            hoveredPosition.value = {
+                x: rect.left + window.scrollX,
+                y: window.innerHeight - 400,
+            };
+            return;
+        }
         hoveredPosition.value = {
             x: rect.left + window.scrollX,
             y: rect.top + window.scrollY,
@@ -49,8 +58,8 @@ function handleAvatarEnter(event, elementId) {
 function handleCursorOnCard(cursorOnPopover) {
     if (!cursorOnPopover && isCursorOnCard.value) {
         setTimeout(() => {
-            hoveredId.value = null;
             // Reset position
+            hoveredId.value = null;
             hoveredPosition.value = { x: 0, y: 0 };
             isCursorOnCard.value = false;
         }, 100);
@@ -207,13 +216,9 @@ onUnmounted(() => {
     align-content: center;
     justify-content: center;
     position: relative;
-    /* place-items: center; */
+    rotate: 5deg;
 }
 .avatar-container {
-    /* display: flex; */
-    /* justify-content: flex-start; */
-    /* transform: rotate(10deg); */
-    /* position: relative; */
     position: absolute;
     transform: translate(0, 50%);
     bottom: 50%;
@@ -225,7 +230,6 @@ onUnmounted(() => {
     height: 60px;
     object-fit: cover;
     border-radius: 50%;
-    /* transform: rotate(-10deg); */
     position: relative;
     z-index: -1;
 }
