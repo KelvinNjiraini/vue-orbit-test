@@ -195,7 +195,7 @@ onUnmounted(() => {
                     v-if="orbit.array !== 0"
                     v-for="(avatarItem, avatarIdx) in handleDuplicateIds(
                         orbit.array
-                    ).slice(0, 12)"
+                    )"
                     :key="avatarItem?.id"
                     class="avatar-container"
                     :class="{
