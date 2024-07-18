@@ -5,29 +5,69 @@ import {
     onUnmounted,
     computed,
     defineAsyncComponent,
-    onBeforeMount,
-    onBeforeUnmount,
+    watch,
 } from 'vue';
 import { useFetch } from './composables/useFetch';
 const ActivityCard = defineAsyncComponent(() =>
     import('./components/ActivityCard.vue')
 );
 // const avatarDiameter = 60;
+const maxOrbitCount = 7;
+const startingPoint = ref(0);
+const currentOrbitCount = ref(maxOrbitCount);
 const hoveredId = ref(null);
 const hoveredPosition = ref({ x: 0, y: 0 });
 const isCursorOnCard = ref(false);
-
 const screenWidth = ref(window.innerWidth);
 const screenHeight = ref(window.innerHeight);
-
-const radius = computed(() => {
-    return Math.min(screenWidth.value / 2, screenHeight.value);
-});
-
 const data = ref([]);
+const slicedData = computed(() => {
+    return data?.value.slice(startingPoint.value, currentOrbitCount.value);
+});
+const modifiedArr = ref([]);
+
+// watch(
+//     () => startingPoint.value,
+//     () => {
+//         console.log(startingPoint);
+//         modifyData(data.value);
+//     }
+// );
+
+function modifyData(data) {
+    let arr = [];
+    let outerHiddenArr = [];
+    let visibleArr = [];
+    let innerHiddenArr = [];
+
+    for (let i = 0; i < data.length; i++) {
+        if (
+            i >= startingPoint.value &&
+            i <= startingPoint.value + maxOrbitCount
+        ) {
+            visibleArr.push({ ...data[i], visible: true });
+        } else if (i >= startingPoint.value + maxOrbitCount) {
+            innerHiddenArr.push({ ...data[i], visible: false });
+        } else if (i <= startingPoint.value) {
+            innerHiddenArr.push({ ...data[i], visible: false });
+        }
+    }
+
+    arr = [...outerHiddenArr, ...visibleArr, ...innerHiddenArr];
+    console.log(arr);
+    modifiedArr.value = arr;
+    return modifiedArr.value;
+}
 
 function handleDuplicateIds(originalArr) {
-    return new Set(originalArr);
+    const uniqueIds = originalArr.reduce((accumulator, current) => {
+        if (!accumulator.includes(current)) {
+            accumulator.push(current);
+        }
+        return accumulator;
+    }, []);
+
+    return uniqueIds;
 }
 
 function handleAvatarEnter(event, elementId) {
@@ -70,28 +110,61 @@ function handleCursorOnCard(cursorOnPopover) {
     }
 }
 
-function calculateOrbitRadius(currentRadius, dataLength, currentIndex) {
-    return (currentRadius / dataLength) * (dataLength - currentIndex);
+function calculateOrbitRadius(
+    currentRadius,
+    dataLength,
+    currentIndex,
+    visible
+) {
+    // subtracting 40px from top as margin
+    return visible
+        ? (currentRadius / maxOrbitCount - 40) * (dataLength - currentIndex)
+        : 0;
 }
 
 function handleAvatarAngle(dataLength, currentIndex) {
     const baseAngle = 160 / dataLength;
     return baseAngle * (currentIndex + 1);
 }
-onBeforeMount(() => {
-    window.addEventListener('scroll', function (event) {
-        console.log(event);
-    });
-});
+
+function addition() {
+    console.log(
+        `Data length: ${data.value.length}, current Count: ${
+            maxOrbitCount + startingPoint.value
+        }`
+    );
+    if (startingPoint.value + maxOrbitCount < data.value.length) {
+        startingPoint.value += 1;
+    }
+}
+
+function subtraction() {
+    if (startingPoint.value <= 0) return;
+    startingPoint.value -= 1;
+}
+
+function scrollHandler(e) {
+    let deltaY = e.deltaY;
+
+    if (deltaY < 0) {
+        console.log('Scrolling Up');
+        console.log('starting point: ' + startingPoint.value);
+        subtraction();
+        return;
+    }
+    if (deltaY > 0) {
+        addition();
+        return;
+    }
+}
 
 onMounted(async () => {
-    //
     data.value = await useFetch(new Date().toISOString());
-    // console.log(data.value);
+    window.addEventListener('wheel', scrollHandler);
 });
 
 onUnmounted(() => {
-    //
+    window.removeEventListener('wheel', scrollHandler);
 });
 </script>
 
@@ -103,31 +176,33 @@ onUnmounted(() => {
                 height: `${calculateOrbitRadius(
                     screenWidth * 0.8,
                     data.length,
-                    index
+                    index,
+                    orbit.visible
                 )}px`,
                 width: `${calculateOrbitRadius(
                     screenWidth * 0.8,
                     data.length,
-                    index
+                    index,
+                    orbit.visible
                 )}px`,
             }"
             v-if="data.length !== 0"
-            v-for="(orbit, index) in data.slice(0, 7)"
-            :key="index"
+            v-for="(orbit, index) in modifyData(data)"
+            :key="orbit.contact_date"
         >
             <div class="orbit">
                 <div
                     v-if="orbit.array !== 0"
                     v-for="(avatarItem, avatarIdx) in handleDuplicateIds(
                         orbit.array
-                    )"
+                    ).slice(0, 12)"
                     :key="avatarItem?.id"
                     class="avatar-container"
+                    :class="{
+                        'hide-orbit': !orbit.visible,
+                        'show-orbit': orbit.visible,
+                    }"
                     :style="{
-                        // width: `${
-                        //     calculateOrbitRadius(radius, data.length, index) +
-                        //     avatarDiameter
-                        // }px`,
                         rotate: `${handleAvatarAngle(
                             orbit.array.length,
                             avatarIdx
@@ -204,7 +279,7 @@ onUnmounted(() => {
         var(--dark-gray) 30%,
         #000000 65%
     );
-    transition: all 200ms ease-in-out;
+    transition: all 0.3s ease-in;
     padding: 1px;
 }
 .orbit {
@@ -232,6 +307,7 @@ onUnmounted(() => {
     border-radius: 50%;
     position: relative;
     z-index: -1;
+    transition: all 0.3s ease-in;
 }
 .avatar::before {
     content: '';
@@ -255,11 +331,27 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     margin-left: -30px;
+    transition: all 0.3s ease-in;
 }
 .avatar-info {
     position: absolute;
 }
 .disable-pointer-events {
     pointer-events: 'none';
+}
+
+.hide-orbit > *,
+.hide-orbit .avatar {
+    visibility: hidden;
+    scale: 0;
+    opacity: 0;
+    /* transition: all 0.3s ease-in; */
+}
+
+.show-orbit > *,
+.show-orbit .avatar {
+    visibility: visible;
+    scale: 1;
+    opacity: 1;
 }
 </style>
