@@ -13,6 +13,7 @@ const ActivityCard = defineAsyncComponent(() =>
 );
 // const avatarDiameter = 60;
 const maxOrbitCount = 7;
+const generalViewAngle = 160;
 const startingPoint = ref(0);
 const currentOrbitCount = ref(maxOrbitCount);
 const hoveredId = ref(null);
@@ -25,14 +26,8 @@ const slicedData = computed(() => {
     return data?.value.slice(startingPoint.value, currentOrbitCount.value);
 });
 const modifiedArr = ref([]);
-
-// watch(
-//     () => startingPoint.value,
-//     () => {
-//         console.log(startingPoint);
-//         modifyData(data.value);
-//     }
-// );
+const radius = ref(screenWidth.value * 0.8);
+const calculatedRadius = ref(0);
 
 function modifyData(data) {
     let arr = [];
@@ -54,20 +49,25 @@ function modifyData(data) {
     }
 
     arr = [...outerHiddenArr, ...visibleArr, ...innerHiddenArr];
-    console.log(arr);
+    arr = arr.map((el, idx) => {
+        return {
+            ...el,
+            isOuterMost: idx === 0 ? true : false,
+            visible: idx < 7 ? true : false,
+        };
+    });
     modifiedArr.value = arr;
+    console.log(modifiedArr.value);
     return modifiedArr.value;
 }
 
-function handleDuplicateIds(originalArr) {
-    const uniqueIds = originalArr.reduce((accumulator, current) => {
-        if (!accumulator.includes(current)) {
-            accumulator.push(current);
-        }
-        return accumulator;
-    }, []);
+function handleDuplicateIds(originalArr, idx) {
+    const uniqueArr = originalArr.filter(
+        (obj, index, self) =>
+            index === self.findIndex((el) => el.name === obj['name'])
+    );
 
-    return uniqueIds;
+    return uniqueArr;
 }
 
 function handleAvatarEnter(event, elementId) {
@@ -77,30 +77,44 @@ function handleAvatarEnter(event, elementId) {
         // showCard.value = true;
 
         const rect = event.target.getBoundingClientRect();
+        let xPosition;
+        let yPosition;
         let topPosition = rect.top;
+        let rightPosition = rect.right;
+
         let distanceFromBottom = window.innerHeight - topPosition;
-        if (distanceFromBottom < 400) {
-            hoveredPosition.value = {
-                x: rect.left + window.scrollX,
-                y: window.innerHeight - 400,
-            };
-            return;
+        let distanceFromRight = window.innerWidth - rightPosition;
+
+        if (distanceFromBottom < 350) {
+            // minus avatar radius to cover the avatar as well
+            yPosition = window.innerHeight - 330;
+        } else {
+            yPosition = rect.top + window.scrollY;
         }
+
+        if (distanceFromRight < 580) {
+            // 580 plus the avatar diameter to bring it a bit more to the left and cover it
+            xPosition = window.innerWidth - 640;
+        } else {
+            xPosition = rect.left + window.scrollX;
+        }
+
         hoveredPosition.value = {
-            x: rect.left + window.scrollX,
-            y: rect.top + window.scrollY,
+            x: xPosition,
+            y: yPosition,
         };
 
         return;
     }
 }
 
-function handleCursorOnCard(cursorOnPopover) {
+function handleCursorOnCard(cursorOnPopover, event) {
     if (!cursorOnPopover && isCursorOnCard.value) {
         setTimeout(() => {
             // Reset position
             hoveredId.value = null;
-            hoveredPosition.value = { x: 0, y: 0 };
+            const rect = event.target.getBoundingClientRect();
+            hoveredPosition.value = { x: rect.left, y: rect.top };
             isCursorOnCard.value = false;
         }, 100);
         return;
@@ -123,16 +137,16 @@ function calculateOrbitRadius(
 }
 
 function handleAvatarAngle(dataLength, currentIndex) {
-    const baseAngle = 160 / dataLength;
+    const baseAngle = generalViewAngle / dataLength;
     return baseAngle * (currentIndex + 1);
 }
 
 function addition() {
-    console.log(
-        `Data length: ${data.value.length}, current Count: ${
-            maxOrbitCount + startingPoint.value
-        }`
-    );
+    //console.log(
+    //  `Data length: ${data.value.length}, current Count: ${
+    //    maxOrbitCount + startingPoint.value
+    //}`
+    //);
     if (startingPoint.value + maxOrbitCount < data.value.length) {
         startingPoint.value += 1;
     }
@@ -174,13 +188,13 @@ onUnmounted(() => {
             class="orbit-container"
             :style="{
                 height: `${calculateOrbitRadius(
-                    screenWidth * 0.8,
+                    radius,
                     data.length,
                     index,
                     orbit.visible
                 )}px`,
                 width: `${calculateOrbitRadius(
-                    screenWidth * 0.8,
+                    radius,
                     data.length,
                     index,
                     orbit.visible
@@ -194,7 +208,8 @@ onUnmounted(() => {
                 <div
                     v-if="orbit.array !== 0"
                     v-for="(avatarItem, avatarIdx) in handleDuplicateIds(
-                        orbit.array
+                        orbit.array,
+                        index
                     )"
                     :key="avatarItem?.id"
                     class="avatar-container"
@@ -227,7 +242,7 @@ onUnmounted(() => {
                                         orbit.array.length,
                                         avatarIdx
                                     ) +
-                                    160 / orbit.array.length
+                                    generalViewAngle / orbit.array.length
                                 }deg`,
                             }"
                         />
@@ -279,7 +294,7 @@ onUnmounted(() => {
         var(--dark-gray) 30%,
         #000000 65%
     );
-    transition: all 0.3s ease-in;
+    transition: all 0.4s ease-in;
     padding: 1px;
 }
 .orbit {
@@ -307,7 +322,7 @@ onUnmounted(() => {
     border-radius: 50%;
     position: relative;
     z-index: -1;
-    transition: all 0.3s ease-in;
+    transition: all 0.4s ease-in;
 }
 .avatar::before {
     content: '';
@@ -331,7 +346,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     margin-left: -30px;
-    transition: all 0.3s ease-in;
+    transition: all 0.4s ease-in;
 }
 .avatar-info {
     position: absolute;
@@ -345,7 +360,8 @@ onUnmounted(() => {
     visibility: hidden;
     scale: 0;
     opacity: 0;
-    /* transition: all 0.3s ease-in; */
+    pointer-events: none;
+    /* transition: all 0.4s ease-in; */
 }
 
 .show-orbit > *,
@@ -353,5 +369,6 @@ onUnmounted(() => {
     visibility: visible;
     scale: 1;
     opacity: 1;
+    pointer-events: auto;
 }
 </style>

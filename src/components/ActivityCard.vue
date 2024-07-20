@@ -49,12 +49,12 @@ const durationAgo = computed(() => {
 function onCursorEnter(event) {
     cursorOnPopover.value = true;
     // console.log(event);
-    emits('cardHoverOn', cursorOnPopover.value);
+    emits('cardHoverOn', cursorOnPopover.value, event);
 }
 
 function onCursorLeave(event) {
     cursorOnPopover.value = false;
-    emits('cardHoverOff', cursorOnPopover.value);
+    emits('cardHoverOff', cursorOnPopover.value, event);
 }
 </script>
 
