@@ -136,7 +136,7 @@ function calculateOrbitRadius(
 }
 
 function handleAvatarAngle(dataLength, currentIndex) {
-    const baseAngle = 180 / dataLength;
+    const baseAngle = generalViewAngle / dataLength;
     return baseAngle * (currentIndex + 1);
 }
 
@@ -234,10 +234,13 @@ onUnmounted(() => {
                             alt="Avatar 3"
                             class="avatar"
                             :style="{
-                                rotate: `-${handleAvatarAngle(
-                                    orbit.array.length,
-                                    avatarIdx
-                                )}deg`,
+                                rotate: `-${
+                                    handleAvatarAngle(
+                                        orbit.array.length,
+                                        avatarIdx
+                                    ) +
+                                    generalViewAngle / orbit.array.length
+                                }deg`,
                             }"
                         />
                         <div
