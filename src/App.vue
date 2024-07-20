@@ -57,7 +57,6 @@ function modifyData(data) {
         };
     });
     modifiedArr.value = arr;
-    console.log(modifiedArr.value);
     return modifiedArr.value;
 }
 
@@ -161,8 +160,6 @@ function scrollHandler(e) {
     let deltaY = e.deltaY;
 
     if (deltaY < 0) {
-        console.log('Scrolling Up');
-        console.log('starting point: ' + startingPoint.value);
         subtraction();
         return;
     }
