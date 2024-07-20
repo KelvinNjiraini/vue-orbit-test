@@ -238,8 +238,9 @@ onUnmounted(() => {
                                     handleAvatarAngle(
                                         orbit.array.length,
                                         avatarIdx
-                                    ) +
-                                    generalViewAngle / orbit.array.length
+                                    )
+                                    // +
+                                    // generalViewAngle / orbit.array.length
                                 }deg`,
                             }"
                         />
